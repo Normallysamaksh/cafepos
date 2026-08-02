@@ -95,9 +95,15 @@ with session_scope() as session:
     assert order.payment_mode == "Split"
     assert (order.subtotal, order.discount_value, order.total) == (220.0, 10.0, 208.0)
     assert order.discount_type == "percentage_item"
+    assert order.discount_scope == "item"
+    assert order.discount_menu_item_id == latte_id
     order_items = list(session.scalars(select(OrderItem).where(OrderItem.order_id == order.id)))
     payments = list(session.scalars(select(SplitPayment).where(SplitPayment.order_id == order.id)))
     assert {item.item_name for item in order_items} == {"Espresso", "Latte"}
+    assert any(
+        item.menu_item_id == order.discount_menu_item_id and item.item_name == "Latte"
+        for item in order_items
+    )
     assert next(item.note for item in order_items if item.item_name == "Espresso") == "No sugar"
     assert {(payment.payment_mode, payment.amount) for payment in payments} == {("Cash", 100.0), ("UPI", 108.0)}
 

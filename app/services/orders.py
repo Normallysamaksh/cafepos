@@ -119,6 +119,8 @@ def save_order(
         subtotal=subtotal,
         discount_type=_discount_type(discount),
         discount_value=discount.value if discount else None,
+        discount_scope=discount.scope if discount else None,
+        discount_menu_item_id=discount.menu_item_id if discount else None,
         total=total,
     )
     session.add(order)

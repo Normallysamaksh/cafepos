@@ -21,6 +21,8 @@ class Order(Base):
     subtotal: Mapped[float] = mapped_column(Float, nullable=False)
     discount_type: Mapped[str | None] = mapped_column(String, nullable=True)
     discount_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    discount_scope: Mapped[str | None] = mapped_column(String, nullable=True)
+    discount_menu_item_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     total: Mapped[float] = mapped_column(Float, nullable=False)
     is_void: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
 

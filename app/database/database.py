@@ -4,7 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -32,6 +32,23 @@ def initialize_database() -> None:
     import app.models  # noqa: F401
 
     Base.metadata.create_all(engine)
+    _add_missing_discount_columns()
+
+
+def _add_missing_discount_columns() -> None:
+    """Add discount history columns to databases created before Module 4.5."""
+    with engine.begin() as connection:
+        existing_columns = {
+            column[1]
+            for column in connection.exec_driver_sql("PRAGMA table_info(orders)")
+        }
+        missing_columns = {
+            "discount_scope": "TEXT",
+            "discount_menu_item_id": "INTEGER",
+        }
+        for name, column_type in missing_columns.items():
+            if name not in existing_columns:
+                connection.execute(text(f"ALTER TABLE orders ADD COLUMN {name} {column_type}"))
 
 
 @contextmanager

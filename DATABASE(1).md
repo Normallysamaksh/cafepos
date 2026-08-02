@@ -48,6 +48,8 @@ Stores completed orders only.
   subtotal         REAL NOT NULL
   discount_type    TEXT
   discount_value   REAL
+  discount_scope   TEXT
+  discount_menu_item_id INTEGER
   total            REAL NOT NULL
   is_void          INTEGER NOT NULL DEFAULT 0
 
@@ -56,6 +58,9 @@ Rules
 -   One row per completed order.
 -   Bill numbers restart from 1 each day.
 -   id never resets.
+-   `discount_scope` is `order` or `item` when a discount is applied.
+-   `discount_menu_item_id` identifies the discounted historical order item
+    when the scope is `item`.
 
 ------------------------------------------------------------------------
 
