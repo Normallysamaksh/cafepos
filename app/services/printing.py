@@ -1,8 +1,6 @@
 """Receipt rendering, printer selection, and local printer preference storage."""
 
-import json
 from html import escape
-from pathlib import Path
 
 from PySide6.QtGui import QTextDocument
 from PySide6.QtPrintSupport import QPrintDialog, QPrinter, QPrinterInfo
@@ -10,10 +8,13 @@ from PySide6.QtWidgets import QWidget
 
 from app.database import session_scope
 from app.models import Order
+from app.services import configuration
 from app.services.reports import get_order
 
 
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "config.json"
+# Kept as a module-level alias so callers and integration checks can target a
+# temporary configuration file without affecting the application's real one.
+CONFIG_PATH = configuration.CONFIG_PATH
 
 
 class ReceiptPrintError(RuntimeError):
@@ -64,16 +65,13 @@ def select_printer(parent: QWidget | None = None) -> QPrinter | None:
 
 def get_default_printer() -> str | None:
     """Return the saved printer name, if receipt printing has selected one before."""
-    return _text_config(_load_config(), "default_printer", "Default Printer")
+    return configuration.get_default_printer(CONFIG_PATH)
 
 
 def save_default_printer(printer_name: str) -> None:
     """Persist the printer choice without changing any other configuration values."""
-    config = _load_config()
-    key = "Default Printer" if "Default Printer" in config else "default_printer"
-    config[key] = printer_name
     try:
-        CONFIG_PATH.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+        configuration.save_default_printer(printer_name, CONFIG_PATH)
     except OSError as error:
         raise ReceiptPrintError("Printer selection could not be saved.") from error
 
@@ -150,19 +148,11 @@ def receipt_html(order: Order) -> str:
 
 def _load_config() -> dict[str, object]:
     """Read the optional local configuration without requiring first-run setup."""
-    try:
-        data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return data if isinstance(data, dict) else {}
+    return configuration.load_configuration(CONFIG_PATH)
 
 
 def _text_config(config: dict[str, object], *keys: str) -> str | None:
-    for key in keys:
-        value = config.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return None
+    return configuration.text_value(config, *keys)
 
 
 def _note_html(note: str | None) -> str:

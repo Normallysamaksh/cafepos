@@ -2,10 +2,29 @@
 
 import sys
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
 
 from app.database import initialize_database
+from app.dialogs import FirstLaunchDialog
+from app.services.configuration import configuration_exists, save_configuration
 from app.ui.dashboard import DashboardWindow
+
+
+def complete_first_launch_setup(parent: QWidget | None = None) -> bool:
+    """Create config.json before showing the application for the first time."""
+    if configuration_exists():
+        return True
+
+    dialog = FirstLaunchDialog(parent)
+    if not dialog.exec():
+        return False
+
+    try:
+        save_configuration(*dialog.values)
+    except OSError:
+        QMessageBox.critical(parent, "CafePOS", "Configuration could not be saved.")
+        return False
+    return True
 
 
 def main() -> int:
@@ -27,6 +46,9 @@ def main() -> int:
         QPushButton:hover { background-color: #f0f4ff; }
         """
     )
+
+    if not complete_first_launch_setup():
+        return 0
 
     window = DashboardWindow()
     window.show()
