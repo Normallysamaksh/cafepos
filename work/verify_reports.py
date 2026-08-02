@@ -76,7 +76,7 @@ assert details.items_table.item(0, 3).text() == "Oat milk"
 assert details.discount_type_label.text() == "Percentage"
 assert details.discount_scope_label.text() == "Item"
 assert details.discount_value_label.text() == "10.00%"
-assert details.payment_breakdown_label.text() == "Cash: ₹100.00\nUPI: ₹116.00"
+assert details.payment_breakdown_label.text() == "Cash ₹100\nUPI ₹116"
 assert details.service_type_label.text() == "Dine In"
 assert details.bill_time_label.text() == f"{today.isoformat()} 10:00:00"
 

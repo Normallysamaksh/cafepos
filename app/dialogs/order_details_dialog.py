@@ -6,7 +6,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
-    QDialogButtonBox,
     QFormLayout,
     QHBoxLayout,
     QHeaderView,
@@ -53,6 +52,9 @@ class OrderDetailsDialog(QDialog):
         self.payment_breakdown_label.setTextFormat(Qt.TextFormat.PlainText)
 
         details_form = QFormLayout()
+        details_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        details_form.setHorizontalSpacing(12)
+        details_form.setVerticalSpacing(10)
         details_form.addRow("Bill Number", self.bill_number_label)
         details_form.addRow("Status", self.status_label)
         details_form.addRow("Service Type", self.service_type_label)
@@ -73,16 +75,19 @@ class OrderDetailsDialog(QDialog):
         self.void_button.clicked.connect(self.void_current_order)
         self.reprint_button = QPushButton("Reprint")
         self.reprint_button.clicked.connect(self.reprint_order)
-        close_button = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
-        close_button.rejected.connect(self.reject)
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.reject)
 
         buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(8)
         buttons_layout.addWidget(self.void_button)
         buttons_layout.addWidget(self.reprint_button)
         buttons_layout.addStretch()
         buttons_layout.addWidget(close_button)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
         layout.addLayout(details_form)
         layout.addWidget(self.items_table)
         layout.addLayout(buttons_layout)
@@ -181,7 +186,7 @@ class OrderDetailsDialog(QDialog):
     def _payment_breakdown_text(order: Order) -> str:
         if order.split_payments:
             return "\n".join(
-                f"{payment.payment_mode}: ₹{payment.amount:.2f}"
+                f"{payment.payment_mode} ₹{payment.amount:g}"
                 for payment in order.split_payments
             )
-        return f"{order.payment_mode}: ₹{order.total:.2f}"
+        return f"{order.payment_mode} ₹{order.total:g}"

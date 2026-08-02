@@ -175,6 +175,7 @@ class BillingWindow(QWidget):
         amount_input = QDoubleSpinBox()
         amount_input.setDecimals(2)
         amount_input.setMaximum(999_999.99)
+        amount_input.setSpecialValueText(" ")
         return amount_input
 
     def load_menu(self) -> None:

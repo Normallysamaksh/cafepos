@@ -47,6 +47,7 @@ class DiscountDialog(QDialog):
         self.value_input = QDoubleSpinBox()
         self.value_input.setDecimals(2)
         self.value_input.setMaximum(999_999.99)
+        self.value_input.setSpecialValueText(" ")
 
         if current_discount is not None:
             self.type_input.setCurrentIndex(self.type_input.findData(current_discount.kind))
@@ -57,6 +58,8 @@ class DiscountDialog(QDialog):
         self.error_label.setStyleSheet("color: #b3261e;")
 
         form_layout = QFormLayout()
+        form_layout.setHorizontalSpacing(12)
+        form_layout.setVerticalSpacing(10)
         form_layout.addRow("Type", self.type_input)
         form_layout.addRow("Apply to", self.target_input)
         form_layout.addRow("Value", self.value_input)
@@ -73,6 +76,8 @@ class DiscountDialog(QDialog):
         buttons_layout.addWidget(buttons)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
         layout.addLayout(form_layout)
         layout.addWidget(self.error_label)
         layout.addLayout(buttons_layout)

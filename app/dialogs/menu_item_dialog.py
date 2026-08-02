@@ -41,12 +41,15 @@ class MenuItemDialog(QDialog):
         self.price_input = QDoubleSpinBox()
         self.price_input.setDecimals(2)
         self.price_input.setMaximum(999_999.99)
+        self.price_input.setSpecialValueText(" ")
         self.price_input.setValue(price)
 
         self.error_label = QLabel()
         self.error_label.setStyleSheet("color: #b3261e;")
 
         form_layout = QFormLayout()
+        form_layout.setHorizontalSpacing(12)
+        form_layout.setVerticalSpacing(10)
         form_layout.addRow("Name", self.name_input)
         form_layout.addRow("Category", self.category_input)
         form_layout.addRow("Price", self.price_input)
@@ -56,6 +59,8 @@ class MenuItemDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
         layout.addLayout(form_layout)
         layout.addWidget(self.error_label)
         layout.addWidget(buttons)

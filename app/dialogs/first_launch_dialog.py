@@ -27,6 +27,8 @@ class FirstLaunchDialog(QDialog):
         self.error_label.setStyleSheet("color: #b3261e;")
 
         form_layout = QFormLayout()
+        form_layout.setHorizontalSpacing(12)
+        form_layout.setVerticalSpacing(10)
         form_layout.addRow("Cafe Name", self.cafe_name_input)
         form_layout.addRow("Receipt Footer", self.receipt_footer_input)
 
@@ -37,6 +39,8 @@ class FirstLaunchDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
         layout.addLayout(form_layout)
         layout.addWidget(self.error_label)
         layout.addWidget(buttons)
