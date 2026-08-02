@@ -2,16 +2,16 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from pathlib import Path
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.database.base import Base
+from app.runtime_paths import application_directory
 
 
-DATABASE_PATH = Path(__file__).resolve().parents[2] / "cafepos.db"
+DATABASE_PATH = application_directory() / "cafepos.db"
 engine = create_engine(
     f"sqlite:///{DATABASE_PATH}",
     connect_args={"check_same_thread": False},

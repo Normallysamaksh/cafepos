@@ -3,8 +3,10 @@
 import json
 from pathlib import Path
 
+from app.runtime_paths import application_directory
 
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "config.json"
+
+CONFIG_PATH = application_directory() / "config.json"
 
 
 def configuration_exists() -> bool:

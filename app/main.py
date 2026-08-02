@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
 
 from app.database import initialize_database
 from app.dialogs import FirstLaunchDialog
+from app.runtime_paths import logs_directory
 from app.services.configuration import configuration_exists, save_configuration
 from app.ui.dashboard import DashboardWindow
 
@@ -29,6 +30,7 @@ def complete_first_launch_setup(parent: QWidget | None = None) -> bool:
 
 def main() -> int:
     """Start the CafePOS desktop application."""
+    logs_directory()
     initialize_database()
 
     application = QApplication(sys.argv)

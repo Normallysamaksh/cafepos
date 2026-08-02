@@ -8,6 +8,11 @@ dependencies = [
     "SQLAlchemy>=2.0",
 ]
 
+[project.optional-dependencies]
+build = [
+    "PyInstaller>=6,<7",
+]
+
 [project.scripts]
 cafepos = "app.main:main"
 
