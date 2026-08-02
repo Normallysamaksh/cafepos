@@ -1,5 +1,7 @@
 """Billing window for creating completed cafe orders."""
 
+from collections.abc import Callable
+
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -13,7 +15,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QMainWindow,
     QMessageBox,
     QPushButton,
     QRadioButton,
@@ -37,7 +38,7 @@ from app.services import (
 )
 
 
-class BillingWindow(QMainWindow):
+class BillingWindow(QWidget):
     """Build and complete one in-memory cafe order at a time."""
 
     def __init__(self) -> None:
@@ -46,6 +47,7 @@ class BillingWindow(QMainWindow):
         self.cart: dict[int, CartLine] = {}
         self.discount: Discount | None = None
         self.menu_items: dict[int, object] = {}
+        self._back_callback: Callable[[], None] | None = None
 
         self.setWindowTitle("New Order")
         self.resize(1100, 700)
@@ -69,17 +71,28 @@ class BillingWindow(QMainWindow):
         splitter.addWidget(cart_panel)
         splitter.setSizes([180, 430, 360])
 
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
+        navigation_layout = QHBoxLayout()
+        self.back_button = QPushButton("Back")
+        self.back_button.clicked.connect(self.go_back)
+        navigation_layout.addWidget(self.back_button)
+        navigation_layout.addStretch()
+        layout.addLayout(navigation_layout)
         layout.addWidget(self.search_input)
         layout.addWidget(splitter)
 
-        central_widget = QWidget()
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
-
         self.load_menu()
         self.refresh_cart()
+
+    def set_back_callback(self, callback: Callable[[], None]) -> None:
+        """Set the navigation action for the screen's Back button."""
+        self._back_callback = callback
+
+    def go_back(self) -> None:
+        """Return to the dashboard through the application navigation shell."""
+        if self._back_callback is not None:
+            self._back_callback()
 
     def create_menu_panel(self) -> QWidget:
         """Create the central menu item panel."""

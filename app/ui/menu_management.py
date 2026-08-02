@@ -1,12 +1,13 @@
 """Menu management window."""
 
+from collections.abc import Callable
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QHeaderView,
     QLineEdit,
-    QMainWindow,
     QMessageBox,
     QPushButton,
     QTableWidget,
@@ -26,11 +27,13 @@ from app.services import (
 )
 
 
-class MenuManagementWindow(QMainWindow):
+class MenuManagementWindow(QWidget):
     """Manage the cafe's current menu items."""
 
     def __init__(self) -> None:
         super().__init__()
+
+        self._back_callback: Callable[[], None] | None = None
 
         self.setWindowTitle("Menu Management")
         self.resize(820, 560)
@@ -61,17 +64,28 @@ class MenuManagementWindow(QMainWindow):
         buttons_layout.addWidget(delete_button)
         buttons_layout.addStretch()
 
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
+        navigation_layout = QHBoxLayout()
+        self.back_button = QPushButton("Back")
+        self.back_button.clicked.connect(self.go_back)
+        navigation_layout.addWidget(self.back_button)
+        navigation_layout.addStretch()
+        layout.addLayout(navigation_layout)
         layout.addWidget(self.search_input)
         layout.addWidget(self.table)
         layout.addLayout(buttons_layout)
 
-        central_widget = QWidget()
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
-
         self.load_items()
+
+    def set_back_callback(self, callback: Callable[[], None]) -> None:
+        """Set the navigation action for the screen's Back button."""
+        self._back_callback = callback
+
+    def go_back(self) -> None:
+        """Return to the dashboard through the application navigation shell."""
+        if self._back_callback is not None:
+            self._back_callback()
 
     def load_items(self) -> None:
         """Load active menu items that match the current name search."""

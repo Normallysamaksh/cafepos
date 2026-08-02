@@ -1,5 +1,6 @@
 """Reports window for completed cafe orders."""
 
+from collections.abc import Callable
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -9,9 +10,9 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QFileDialog,
     QFormLayout,
+    QHBoxLayout,
     QHeaderView,
     QLabel,
-    QMainWindow,
     QMessageBox,
     QPushButton,
     QTableWidget,
@@ -61,11 +62,13 @@ class ReportTab(QWidget):
         layout.addWidget(self.orders_table)
 
 
-class ReportsWindow(QMainWindow):
+class ReportsWindow(QWidget):
     """Display today, current-week, and current-month completed-order reports."""
 
     def __init__(self) -> None:
         super().__init__()
+
+        self._back_callback: Callable[[], None] | None = None
 
         self.setWindowTitle("Reports")
         self.resize(820, 560)
@@ -87,12 +90,25 @@ class ReportsWindow(QMainWindow):
         self.export_button = QPushButton("Export Excel")
         self.export_button.clicked.connect(self.export_current_report)
 
-        central_widget = QWidget()
-        layout = QVBoxLayout(central_widget)
+        layout = QVBoxLayout(self)
+        navigation_layout = QHBoxLayout()
+        self.back_button = QPushButton("Back")
+        self.back_button.clicked.connect(self.go_back)
+        navigation_layout.addWidget(self.back_button)
+        navigation_layout.addStretch()
+        layout.addLayout(navigation_layout)
         layout.addWidget(self.tabs)
         layout.addWidget(self.export_button)
-        self.setCentralWidget(central_widget)
         self.refresh_reports()
+
+    def set_back_callback(self, callback: Callable[[], None]) -> None:
+        """Set the navigation action for the screen's Back button."""
+        self._back_callback = callback
+
+    def go_back(self) -> None:
+        """Return to the dashboard through the application navigation shell."""
+        if self._back_callback is not None:
+            self._back_callback()
 
     def refresh_reports(self) -> None:
         """Refresh all period summaries and tables from the local database."""
