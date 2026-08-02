@@ -1,15 +1,19 @@
 """Reports window for completed cafe orders."""
 
 from datetime import date, timedelta
+from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QFileDialog,
     QFormLayout,
     QHeaderView,
     QLabel,
     QMainWindow,
+    QMessageBox,
+    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -21,6 +25,7 @@ from app.database import session_scope
 from app.dialogs import OrderDetailsDialog
 from app.models import Order
 from app.services import ReportSummary, get_orders_for_period, get_report_summary
+from app.services.excel_export import export_report_to_xlsx
 
 
 class ReportTab(QWidget):
@@ -79,7 +84,14 @@ class ReportsWindow(QMainWindow):
             )
 
         self.tabs.currentChanged.connect(self.refresh_current_tab)
-        self.setCentralWidget(self.tabs)
+        self.export_button = QPushButton("Export Excel")
+        self.export_button.clicked.connect(self.export_current_report)
+
+        central_widget = QWidget()
+        layout = QVBoxLayout(central_widget)
+        layout.addWidget(self.tabs)
+        layout.addWidget(self.export_button)
+        self.setCentralWidget(central_widget)
         self.refresh_reports()
 
     def refresh_reports(self) -> None:
@@ -153,6 +165,40 @@ class ReportsWindow(QMainWindow):
         order_id = bill_number_item.data(Qt.ItemDataRole.UserRole)
         dialog = OrderDetailsDialog(order_id, self.refresh_reports, self)
         dialog.exec()
+
+    def export_current_report(self) -> None:
+        """Export the active report period to an Excel workbook."""
+        title = self.tabs.tabText(self.tabs.currentIndex())
+        start_date, end_date = self.period_dates(title)
+        filename = f"CafePOS_Report_{date.today().isoformat()}.xlsx"
+        destination, _selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Export Report",
+            filename,
+            "Excel Workbook (*.xlsx)",
+        )
+        if not destination:
+            return
+        if not destination.lower().endswith(".xlsx"):
+            destination = f"{destination}.xlsx"
+
+        try:
+            with session_scope() as session:
+                summary = get_report_summary(session, start_date, end_date)
+                orders = get_orders_for_period(session, start_date, end_date)
+                export_report_to_xlsx(
+                    Path(destination),
+                    f"CafePOS {title} Report",
+                    start_date,
+                    end_date,
+                    summary,
+                    orders,
+                )
+        except (OSError, ValueError) as error:
+            QMessageBox.warning(self, "CafePOS", f"Report could not be exported.\n{error}")
+            return
+
+        QMessageBox.information(self, "CafePOS", "Export Successful")
 
     def showEvent(self, event: object) -> None:
         """Ensure reports are current whenever the window is shown."""
