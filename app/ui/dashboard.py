@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QMainWindow, QMessageBox, QPushButton, QVBoxLayout
 
 from app.ui.billing import BillingWindow
 from app.ui.menu_management import MenuManagementWindow
+from app.ui.reports import ReportsWindow
 
 
 class DashboardWindow(QMainWindow):
@@ -28,6 +29,8 @@ class DashboardWindow(QMainWindow):
             tile.setCursor(Qt.CursorShape.PointingHandCursor)
             if label == "New Order":
                 tile.clicked.connect(self.open_new_order)
+            elif label == "Reports":
+                tile.clicked.connect(self.open_reports)
             elif label == "Menu Management":
                 tile.clicked.connect(self.open_menu_management)
             layout.addWidget(tile)
@@ -36,6 +39,7 @@ class DashboardWindow(QMainWindow):
 
         self.menu_management_window: MenuManagementWindow | None = None
         self.billing_window: BillingWindow | None = None
+        self.reports_window: ReportsWindow | None = None
 
     def open_new_order(self) -> None:
         """Open billing, optionally discarding an existing unfinished cart."""
@@ -65,3 +69,13 @@ class DashboardWindow(QMainWindow):
         self.menu_management_window.show()
         self.menu_management_window.raise_()
         self.menu_management_window.activateWindow()
+
+    def open_reports(self) -> None:
+        """Open the reports window with current local order data."""
+        if self.reports_window is None:
+            self.reports_window = ReportsWindow()
+
+        self.reports_window.refresh_reports()
+        self.reports_window.show()
+        self.reports_window.raise_()
+        self.reports_window.activateWindow()

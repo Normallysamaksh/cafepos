@@ -1,0 +1,179 @@
+"""Dialog for viewing and voiding a completed order."""
+
+from collections.abc import Callable
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+
+from app.database import session_scope
+from app.models import Order
+from app.services import get_order, void_order
+
+
+class OrderDetailsDialog(QDialog):
+    """Show immutable order snapshots and allow a completed order to be voided."""
+
+    def __init__(
+        self,
+        order_id: int,
+        on_order_voided: Callable[[], None] | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+
+        self.order_id = order_id
+        self.on_order_voided = on_order_voided
+        self.setWindowTitle("Order Details")
+        self.resize(760, 560)
+        self.setMinimumSize(620, 440)
+
+        self.bill_number_label = QLabel()
+        self.status_label = QLabel()
+        self.service_type_label = QLabel()
+        self.bill_time_label = QLabel()
+        self.discount_type_label = QLabel()
+        self.discount_scope_label = QLabel()
+        self.discount_value_label = QLabel()
+        self.payment_breakdown_label = QLabel()
+        self.payment_breakdown_label.setTextFormat(Qt.TextFormat.PlainText)
+
+        details_form = QFormLayout()
+        details_form.addRow("Bill Number", self.bill_number_label)
+        details_form.addRow("Status", self.status_label)
+        details_form.addRow("Service Type", self.service_type_label)
+        details_form.addRow("Bill Time", self.bill_time_label)
+        details_form.addRow("Discount Type", self.discount_type_label)
+        details_form.addRow("Discount Scope", self.discount_scope_label)
+        details_form.addRow("Discount Value", self.discount_value_label)
+        details_form.addRow("Payment Breakdown", self.payment_breakdown_label)
+
+        self.items_table = QTableWidget(0, 4)
+        self.items_table.setHorizontalHeaderLabels(["Item", "Quantity", "Unit Price", "Internal Note"])
+        self.items_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.items_table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.items_table.verticalHeader().setVisible(False)
+        self.items_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+        self.void_button = QPushButton("Void Order")
+        self.void_button.clicked.connect(self.void_current_order)
+        self.reprint_button = QPushButton("Reprint")
+        self.reprint_button.clicked.connect(self.show_reprint_placeholder)
+        close_button = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close_button.rejected.connect(self.reject)
+
+        buttons_layout = QHBoxLayout()
+        buttons_layout.addWidget(self.void_button)
+        buttons_layout.addWidget(self.reprint_button)
+        buttons_layout.addStretch()
+        buttons_layout.addWidget(close_button)
+
+        layout = QVBoxLayout(self)
+        layout.addLayout(details_form)
+        layout.addWidget(self.items_table)
+        layout.addLayout(buttons_layout)
+
+        self.load_order()
+
+    def load_order(self) -> None:
+        """Load immutable details from the completed order and item snapshots."""
+        with session_scope() as session:
+            order = get_order(session, self.order_id)
+            if order is None:
+                self.reject()
+                return
+
+            self._populate(order)
+
+    def _populate(self, order: Order) -> None:
+        """Populate the dialog while related records are available in the session."""
+        is_void = bool(order.is_void)
+        self.bill_number_label.setText(str(order.bill_number))
+        self.status_label.setText("VOIDED" if is_void else "Completed")
+        self.status_label.setStyleSheet("color: #b3261e; font-weight: 600;" if is_void else "")
+        self.service_type_label.setText(order.service_type)
+        self.bill_time_label.setText(f"{order.order_date} {order.order_time}")
+        self.discount_type_label.setText(self._discount_type_text(order))
+        self.discount_scope_label.setText(self._discount_scope_text(order))
+        self.discount_value_label.setText(self._discount_value_text(order))
+        self.payment_breakdown_label.setText(self._payment_breakdown_text(order))
+        self.void_button.setEnabled(not is_void)
+        self.reprint_button.setEnabled(not is_void)
+
+        self.items_table.setRowCount(len(order.items))
+        for row, item in enumerate(order.items):
+            values = (
+                item.item_name,
+                str(item.quantity),
+                f"₹{item.unit_price:.2f}",
+                item.note or "",
+            )
+            for column, value in enumerate(values):
+                self.items_table.setItem(row, column, QTableWidgetItem(value))
+
+    def void_current_order(self) -> None:
+        """Confirm and permanently mark this completed order as voided."""
+        confirmed = QMessageBox.question(
+            self,
+            "Void Order",
+            "Void this order? This cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirmed != QMessageBox.StandardButton.Yes:
+            return
+
+        with session_scope() as session:
+            if not void_order(session, self.order_id):
+                return
+
+        self.load_order()
+        if self.on_order_voided is not None:
+            self.on_order_voided()
+
+    def show_reprint_placeholder(self) -> None:
+        """Explain that printing is intentionally outside the current module."""
+        QMessageBox.information(self, "Reprint", "Receipt reprinting is not available yet.")
+
+    @staticmethod
+    def _discount_type_text(order: Order) -> str:
+        if order.discount_type is None:
+            return "None"
+        return order.discount_type.split("_", maxsplit=1)[0].replace("_", " ").title()
+
+    @staticmethod
+    def _discount_scope_text(order: Order) -> str:
+        scope = order.discount_scope
+        if scope is None and order.discount_type and "_" in order.discount_type:
+            scope = order.discount_type.rsplit("_", maxsplit=1)[1]
+        return scope.title() if scope else "None"
+
+    @staticmethod
+    def _discount_value_text(order: Order) -> str:
+        if order.discount_value is None:
+            return "—"
+        if order.discount_type and order.discount_type.startswith("percentage"):
+            return f"{order.discount_value:.2f}%"
+        return f"₹{order.discount_value:.2f}"
+
+    @staticmethod
+    def _payment_breakdown_text(order: Order) -> str:
+        if order.split_payments:
+            return "\n".join(
+                f"{payment.payment_mode}: ₹{payment.amount:.2f}"
+                for payment in order.split_payments
+            )
+        return f"{order.payment_mode}: ₹{order.total:.2f}"

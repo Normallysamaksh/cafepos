@@ -15,6 +15,13 @@ from app.services.orders import (
     save_order,
     validate_payment,
 )
+from app.services.reports import (
+    ReportSummary,
+    get_order,
+    get_orders_for_period,
+    get_report_summary,
+    void_order,
+)
 
 __all__ = [
     "add_menu_item",
@@ -28,4 +35,9 @@ __all__ = [
     "next_bill_number",
     "save_order",
     "validate_payment",
+    "ReportSummary",
+    "get_order",
+    "get_orders_for_period",
+    "get_report_summary",
+    "void_order",
 ]
