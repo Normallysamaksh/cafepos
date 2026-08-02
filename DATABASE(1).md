@@ -1,0 +1,188 @@
+# CafePOS Database Specification
+
+## Database
+
+Engine: SQLite
+
+Database File:
+
+cafepos.db
+
+All timestamps use the local system time.
+
+------------------------------------------------------------------------
+
+# Table: menu_items
+
+Stores the current café menu.
+
+  Column       Type                                Notes
+  ------------ ----------------------------------- ---------------------
+  id           INTEGER PRIMARY KEY AUTOINCREMENT   Internal ID
+  name         TEXT NOT NULL                       Menu item name
+  category     TEXT NOT NULL                       Category name
+  price        REAL NOT NULL                       GST-inclusive price
+  is_deleted   INTEGER NOT NULL DEFAULT 0          Soft delete flag
+
+Rules
+
+-   Name is required.
+-   Category is required.
+-   Price must be greater than 0.
+-   Deleted items are hidden from the UI.
+
+------------------------------------------------------------------------
+
+# Table: orders
+
+Stores completed orders only.
+
+  Column           Type
+  ---------------- -----------------------------------
+  id               INTEGER PRIMARY KEY AUTOINCREMENT
+  bill_number      INTEGER NOT NULL
+  order_date       TEXT NOT NULL
+  order_time       TEXT NOT NULL
+  service_type     TEXT NOT NULL
+  payment_mode     TEXT NOT NULL
+  subtotal         REAL NOT NULL
+  discount_type    TEXT
+  discount_value   REAL
+  total            REAL NOT NULL
+  is_void          INTEGER NOT NULL DEFAULT 0
+
+Rules
+
+-   One row per completed order.
+-   Bill numbers restart from 1 each day.
+-   id never resets.
+
+------------------------------------------------------------------------
+
+# Table: order_items
+
+Stores every item sold.
+
+  Column         Type
+  -------------- -----------------------------------
+  id             INTEGER PRIMARY KEY AUTOINCREMENT
+  order_id       INTEGER NOT NULL
+  menu_item_id   INTEGER
+  item_name      TEXT NOT NULL
+  quantity       INTEGER NOT NULL
+  unit_price     REAL NOT NULL
+  note           TEXT
+
+Foreign Key
+
+order_id -\> orders.id
+
+Rules
+
+-   item_name and unit_price are copied from the menu when the order is
+    completed.
+-   Historical orders never change.
+
+------------------------------------------------------------------------
+
+# Table: split_payments
+
+Only used when payment mode is Split.
+
+  Column         Type
+  -------------- -----------------------------------
+  id             INTEGER PRIMARY KEY AUTOINCREMENT
+  order_id       INTEGER NOT NULL
+  payment_mode   TEXT NOT NULL
+  amount         REAL NOT NULL
+
+Foreign Key
+
+order_id -\> orders.id
+
+Example
+
+Cash 120
+
+UPI 80
+
+------------------------------------------------------------------------
+
+# Relationships
+
+orders
+
+└── order_items
+
+└── split_payments
+
+------------------------------------------------------------------------
+
+# Bill Number Logic
+
+When an order is completed:
+
+1.  Read today's date.
+2.  Find the largest bill number for today.
+3.  Assign next number.
+4.  Save order.
+
+Example
+
+2026-08-03
+
+1 2 3 4
+
+Next order
+
+5
+
+On a new day
+
+Bill numbering starts again from 1.
+
+------------------------------------------------------------------------
+
+# Deleting Menu Items
+
+Deleting a menu item:
+
+-   Sets is_deleted = 1.
+-   Removes it from the UI.
+-   Does not affect historical orders.
+
+------------------------------------------------------------------------
+
+# Configuration
+
+Application settings are stored in:
+
+config.json
+
+Contains:
+
+-   Cafe Name
+-   Receipt Footer
+-   Default Printer
+
+------------------------------------------------------------------------
+
+# Log Files
+
+Unexpected errors are written to:
+
+logs/YYYY-MM-DD.log
+
+------------------------------------------------------------------------
+
+# Backup
+
+Backing up the application only requires:
+
+CafePOS.exe
+
+cafepos.db
+
+config.json
+
+logs/ (optional)
