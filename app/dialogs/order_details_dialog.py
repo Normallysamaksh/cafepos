@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from app.database import session_scope
 from app.models import Order
 from app.services import get_order, void_order
+from app.services.printing import ReceiptPrintError, print_receipt
 
 
 class OrderDetailsDialog(QDialog):
@@ -71,7 +72,7 @@ class OrderDetailsDialog(QDialog):
         self.void_button = QPushButton("Void Order")
         self.void_button.clicked.connect(self.void_current_order)
         self.reprint_button = QPushButton("Reprint")
-        self.reprint_button.clicked.connect(self.show_reprint_placeholder)
+        self.reprint_button.clicked.connect(self.reprint_order)
         close_button = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         close_button.rejected.connect(self.reject)
 
@@ -144,9 +145,16 @@ class OrderDetailsDialog(QDialog):
         if self.on_order_voided is not None:
             self.on_order_voided()
 
-    def show_reprint_placeholder(self) -> None:
-        """Explain that printing is intentionally outside the current module."""
-        QMessageBox.information(self, "Reprint", "Receipt reprinting is not available yet.")
+    def reprint_order(self) -> None:
+        """Print this completed order unless it has been voided."""
+        try:
+            printed = print_receipt(self.order_id, self)
+        except ReceiptPrintError:
+            QMessageBox.warning(self, "CafePOS", "Receipt could not be printed.")
+            return
+
+        if printed:
+            QMessageBox.information(self, "CafePOS", "Bill Printed")
 
     @staticmethod
     def _discount_type_text(order: Order) -> str:

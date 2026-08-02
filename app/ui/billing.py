@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from app.database import session_scope
 from app.dialogs.discount_dialog import DiscountDialog
+from app.services.printing import ReceiptPrintError, print_receipt
 from app.services import (
     CartLine,
     Discount,
@@ -330,7 +331,7 @@ class BillingWindow(QMainWindow):
             return
 
         with session_scope() as session:
-            save_order(
+            order = save_order(
                 session,
                 lines,
                 self.discount,
@@ -339,14 +340,27 @@ class BillingWindow(QMainWindow):
                 service_type=self.service_type_input.currentText(),
             )
 
-        QMessageBox.question(
+        should_print = QMessageBox.question(
             self,
             "CafePOS",
             "Print receipt?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
+        if should_print == QMessageBox.StandardButton.Yes:
+            self.print_completed_order(order.id)
         self.reset_order()
+
+    def print_completed_order(self, order_id: int) -> None:
+        """Print a saved order while keeping it available if printing fails."""
+        try:
+            printed = print_receipt(order_id, self)
+        except ReceiptPrintError:
+            QMessageBox.warning(self, "CafePOS", "Receipt could not be printed.")
+            return
+
+        if printed:
+            QMessageBox.information(self, "CafePOS", "Bill Printed")
 
     def has_active_cart(self) -> bool:
         """Return whether the current unfinished order contains any items."""

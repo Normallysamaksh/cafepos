@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 import app.database.database as database
 import app.models  # noqa: F401
+import app.ui.billing as billing
 from app.database.base import Base
 from app.database import session_scope
 from app.dialogs.discount_dialog import DiscountDialog
@@ -41,6 +42,9 @@ with session_scope() as session:
     latte_id = latte.id
 
 application = QApplication([])
+printed_order_ids: list[int] = []
+original_print_receipt = billing.print_receipt
+billing.print_receipt = lambda order_id, _parent: printed_order_ids.append(order_id) or True
 window = BillingWindow()
 assert [window.categories_list.item(index).text() for index in range(window.categories_list.count())] == ["Coffee", "Tea"]
 assert [window.items_list.item(index).data(256) for index in range(window.items_list.count())] == [espresso_id, latte_id]
@@ -82,11 +86,15 @@ window.split_cash_input.setValue(100)
 window.split_upi_input.setValue(108)
 
 original_question = QMessageBox.question
+original_information = QMessageBox.information
 QMessageBox.question = lambda *_args, **_kwargs: QMessageBox.StandardButton.Yes
+QMessageBox.information = lambda *_args, **_kwargs: QMessageBox.StandardButton.Ok
 window.complete_order()
 QMessageBox.question = original_question
+QMessageBox.information = original_information
 assert not window.cart
 assert not window.done_button.isEnabled()
+assert printed_order_ids == [1]
 
 with session_scope() as session:
     order = session.scalar(select(Order).order_by(Order.id))
@@ -146,5 +154,6 @@ with session_scope() as session:
 database.engine.dispose()
 database.engine = original_engine
 database.SessionLocal = original_session_local
+billing.print_receipt = original_print_receipt
 
 print("Billing integration: passed")
