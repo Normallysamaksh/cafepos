@@ -15,6 +15,9 @@ from PySide6.QtWidgets import (
 )
 
 
+from app.ui.widgets import AutoSelectDoubleSpinBox
+
+
 class MenuItemDialog(QDialog):
     """Collect valid name, category, and price values for a menu item."""
 
@@ -38,7 +41,7 @@ class MenuItemDialog(QDialog):
         self.category_input.addItems(categories)
         self.category_input.setCurrentText(category)
 
-        self.price_input = QDoubleSpinBox()
+        self.price_input = AutoSelectDoubleSpinBox()
         self.price_input.setDecimals(2)
         self.price_input.setMaximum(999_999.99)
         self.price_input.setSpecialValueText(" ")

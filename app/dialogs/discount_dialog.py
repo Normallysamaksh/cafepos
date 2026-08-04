@@ -12,11 +12,13 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QStyle,
     QVBoxLayout,
     QWidget,
 )
 
 from app.services.orders import CartLine, Discount, calculate_order_totals
+from app.ui.widgets import AutoSelectDoubleSpinBox
 
 
 class DiscountDialog(QDialog):
@@ -35,6 +37,8 @@ class DiscountDialog(QDialog):
         self.setWindowTitle("Discount")
         self.setMinimumWidth(340)
 
+        style = self.style()
+
         self.type_input = QComboBox()
         self.type_input.addItem("Flat Amount", "flat")
         self.type_input.addItem("Percentage", "percentage")
@@ -44,7 +48,7 @@ class DiscountDialog(QDialog):
         for line in self.cart_lines:
             self.target_input.addItem(line.item_name, line.menu_item_id)
 
-        self.value_input = QDoubleSpinBox()
+        self.value_input = AutoSelectDoubleSpinBox()
         self.value_input.setDecimals(2)
         self.value_input.setMaximum(999_999.99)
         self.value_input.setSpecialValueText(" ")
@@ -65,12 +69,14 @@ class DiscountDialog(QDialog):
         form_layout.addRow("Value", self.value_input)
 
         clear_button = QPushButton("Clear")
+        clear_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogDiscardButton))
         clear_button.clicked.connect(self.clear_discount)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Apply | QDialogButtonBox.StandardButton.Cancel)
         buttons.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(self.apply_discount)
         buttons.rejected.connect(self.reject)
 
         buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(8)
         buttons_layout.addWidget(clear_button)
         buttons_layout.addStretch()
         buttons_layout.addWidget(buttons)

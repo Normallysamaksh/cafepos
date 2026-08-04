@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QStyle,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -41,6 +42,8 @@ class OrderDetailsDialog(QDialog):
         self.resize(760, 560)
         self.setMinimumSize(620, 440)
 
+        style = self.style()
+
         self.bill_number_label = QLabel()
         self.status_label = QLabel()
         self.service_type_label = QLabel()
@@ -51,7 +54,20 @@ class OrderDetailsDialog(QDialog):
         self.payment_breakdown_label = QLabel()
         self.payment_breakdown_label.setTextFormat(Qt.TextFormat.PlainText)
 
+        for label in (
+            self.bill_number_label,
+            self.status_label,
+            self.service_type_label,
+            self.bill_time_label,
+            self.discount_type_label,
+            self.discount_scope_label,
+            self.discount_value_label,
+            self.payment_breakdown_label,
+        ):
+            label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+
         details_form = QFormLayout()
+        details_form.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         details_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         details_form.setHorizontalSpacing(12)
         details_form.setVerticalSpacing(10)
@@ -72,17 +88,20 @@ class OrderDetailsDialog(QDialog):
         self.items_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         self.void_button = QPushButton("Void Order")
+        self.void_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_TrashIcon))
         self.void_button.clicked.connect(self.void_current_order)
         self.reprint_button = QPushButton("Reprint")
+        self.reprint_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
         self.reprint_button.clicked.connect(self.reprint_order)
         close_button = QPushButton("Close")
+        close_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogCloseButton))
         close_button.clicked.connect(self.reject)
 
         buttons_layout = QHBoxLayout()
         buttons_layout.setSpacing(8)
+        buttons_layout.addStretch()
         buttons_layout.addWidget(self.void_button)
         buttons_layout.addWidget(self.reprint_button)
-        buttons_layout.addStretch()
         buttons_layout.addWidget(close_button)
 
         layout = QVBoxLayout(self)
@@ -184,9 +203,12 @@ class OrderDetailsDialog(QDialog):
 
     @staticmethod
     def _payment_breakdown_text(order: Order) -> str:
+        def format_amount(amount: float) -> str:
+            return f"{int(amount)}" if amount.is_integer() else f"{amount:.2f}"
+
         if order.split_payments:
             return "\n".join(
-                f"{payment.payment_mode} ₹{payment.amount:g}"
+                f"{payment.payment_mode} ₹{format_amount(payment.amount)}"
                 for payment in order.split_payments
             )
-        return f"{order.payment_mode} ₹{order.total:g}"
+        return f"{order.payment_mode} ₹{format_amount(order.total)}"

@@ -13,13 +13,14 @@ window.show()
 
 assert isinstance(window, QMainWindow)
 assert isinstance(window.centralWidget(), QStackedWidget)
-assert window.pages.count() == 4
+assert window.pages.count() == 5
 assert all(
     not isinstance(page, QMainWindow)
     for page in (
         window.billing_window,
         window.menu_management_window,
         window.reports_window,
+        window.settings_window,
     )
 )
 
@@ -36,6 +37,11 @@ assert window.pages.currentWidget() is window.dashboard_page
 window.open_reports()
 assert window.pages.currentWidget() is window.reports_window
 window.reports_window.back_button.click()
+assert window.pages.currentWidget() is window.dashboard_page
+
+window.open_settings()
+assert window.pages.currentWidget() is window.settings_window
+window.settings_window.back_button.click()
 assert window.pages.currentWidget() is window.dashboard_page
 
 window.open_new_order()

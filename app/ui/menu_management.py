@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QStyle,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -39,6 +40,8 @@ class MenuManagementWindow(QWidget):
         self.resize(820, 560)
         self.setMinimumSize(620, 400)
 
+        style = self.style()
+
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search by item name")
         self.search_input.textChanged.connect(self.load_items)
@@ -52,13 +55,17 @@ class MenuManagementWindow(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         add_button = QPushButton("Add")
+        add_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder))
         add_button.clicked.connect(self.add_item)
         edit_button = QPushButton("Edit")
+        edit_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogContentsView))
         edit_button.clicked.connect(self.edit_item)
         delete_button = QPushButton("Delete")
+        delete_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_TrashIcon))
         delete_button.clicked.connect(self.delete_item)
 
         buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(8)
         buttons_layout.addWidget(add_button)
         buttons_layout.addWidget(edit_button)
         buttons_layout.addWidget(delete_button)
@@ -66,8 +73,10 @@ class MenuManagementWindow(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(12)
         navigation_layout = QHBoxLayout()
         self.back_button = QPushButton("Back")
+        self.back_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_ArrowLeft))
         self.back_button.clicked.connect(self.go_back)
         navigation_layout.addWidget(self.back_button)
         navigation_layout.addStretch()

@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QScrollArea,
     QSplitter,
+    QStyle,
     QVBoxLayout,
     QWidget,
 )
@@ -36,6 +37,7 @@ from app.services import (
     save_order,
     validate_payment,
 )
+from app.ui.widgets import AutoSelectDoubleSpinBox
 
 
 class BillingWindow(QWidget):
@@ -72,9 +74,11 @@ class BillingWindow(QWidget):
         splitter.setSizes([180, 430, 360])
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(12)
         navigation_layout = QHBoxLayout()
         self.back_button = QPushButton("Back")
+        self.back_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowLeft))
         self.back_button.clicked.connect(self.go_back)
         navigation_layout.addWidget(self.back_button)
         navigation_layout.addStretch()
@@ -98,7 +102,11 @@ class BillingWindow(QWidget):
         """Create the central menu item panel."""
         panel = QWidget()
         layout = QVBoxLayout(panel)
-        layout.addWidget(QLabel("Items"))
+        layout.setContentsMargins(8, 0, 8, 0)
+        layout.setSpacing(8)
+        header = QLabel("Items")
+        header.setStyleSheet("font-weight: 600; color: #5c3d26;")
+        layout.addWidget(header)
         layout.addWidget(self.items_list)
         return panel
 
@@ -106,7 +114,11 @@ class BillingWindow(QWidget):
         """Create the cart and checkout controls panel."""
         panel = QWidget()
         layout = QVBoxLayout(panel)
-        layout.addWidget(QLabel("Cart"))
+        layout.setContentsMargins(8, 0, 8, 0)
+        layout.setSpacing(10)
+        header = QLabel("Cart")
+        header.setStyleSheet("font-weight: 600; color: #5c3d26;")
+        layout.addWidget(header)
 
         self.cart_content = QWidget()
         self.cart_layout = QVBoxLayout(self.cart_content)
@@ -122,6 +134,7 @@ class BillingWindow(QWidget):
         self.discount_label = QLabel()
         self.total_label = QLabel()
         self.discount_button = QPushButton("Discount")
+        self.discount_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogContentsView))
         self.discount_button.clicked.connect(self.open_discount_dialog)
 
         summary_layout = QFormLayout()
@@ -132,7 +145,9 @@ class BillingWindow(QWidget):
         layout.addWidget(self.discount_button)
 
         self.service_type_input = QComboBox()
-        self.service_type_input.addItems(["Dine In", "Takeaway"])
+        self.service_type_input.addItems(["Dine In", "Takeaway", "Delivery"])
+        self.service_type_input.setMinimumWidth(140)
+        self.service_type_input.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
 
         self.cash_radio = QRadioButton("Cash")
         self.upi_radio = QRadioButton("UPI")
@@ -164,6 +179,7 @@ class BillingWindow(QWidget):
         layout.addWidget(payment_box)
 
         self.done_button = QPushButton("Done")
+        self.done_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton))
         self.done_button.clicked.connect(self.complete_order)
         layout.addWidget(self.done_button)
 
@@ -172,7 +188,7 @@ class BillingWindow(QWidget):
     @staticmethod
     def amount_input() -> QDoubleSpinBox:
         """Create a two-decimal payment amount input."""
-        amount_input = QDoubleSpinBox()
+        amount_input = AutoSelectDoubleSpinBox()
         amount_input.setDecimals(2)
         amount_input.setMaximum(999_999.99)
         amount_input.setSpecialValueText(" ")

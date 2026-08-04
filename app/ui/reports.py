@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QStyle,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -57,6 +58,8 @@ class ReportTab(QWidget):
         self.orders_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(12)
         layout.addLayout(summary_form)
         layout.addWidget(self.empty_label)
         layout.addWidget(self.orders_table)
@@ -74,6 +77,8 @@ class ReportsWindow(QWidget):
         self.resize(820, 560)
         self.setMinimumSize(620, 400)
 
+        style = self.style()
+
         self.tabs = QTabWidget()
         self.report_tabs = {
             "Today": ReportTab(),
@@ -88,11 +93,15 @@ class ReportsWindow(QWidget):
 
         self.tabs.currentChanged.connect(self.refresh_current_tab)
         self.export_button = QPushButton("Export Excel")
+        self.export_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
         self.export_button.clicked.connect(self.export_current_report)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(12)
         navigation_layout = QHBoxLayout()
         self.back_button = QPushButton("Back")
+        self.back_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_ArrowLeft))
         self.back_button.clicked.connect(self.go_back)
         navigation_layout.addWidget(self.back_button)
         navigation_layout.addStretch()

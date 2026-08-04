@@ -14,79 +14,138 @@ from app.ui.dashboard import DashboardWindow
 
 APPLICATION_STYLESHEET = """
     QWidget, QDialog, QMessageBox {
-        background-color: #f7f7f7;
-        color: #202124;
+        background-color: #f6f5f2;
+        color: #2d2d2d;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        font-size: 13px;
     }
-    QLineEdit, QAbstractSpinBox, QComboBox {
+    QFrame#sidebar {
+        background-color: #ede8e3;
+        border-right: 1px solid #dfd8d0;
+    }
+    QFrame.card, QFrame#card {
         background-color: #ffffff;
-        color: #202124;
-        border: 1px solid #b8b8b8;
-        border-radius: 6px;
-        padding: 5px 7px;
-        selection-background-color: #dbe7ff;
-        selection-color: #202124;
+        border: 1px solid #e0dad5;
+        border-radius: 8px;
+    }
+    QLineEdit, QAbstractSpinBox, QComboBox QAbstractItemView {
+        background-color: #ffffff;
+        color: #2d2d2d;
+        border: 1px solid #d4cecb;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 13px;
+        selection-background-color: #f2e8de;
+        selection-color: #2d2d2d;
+    }
+    QComboBox {
+        background-color: #ffffff;
+        color: #2d2d2d;
+        border: 1px solid #d4cecb;
+        border-radius: 8px;
+        padding: 6px 24px 6px 10px;
+        min-width: 120px;
+        font-size: 13px;
+        selection-background-color: #f2e8de;
+        selection-color: #2d2d2d;
+    }
+    QComboBox::drop-down {
+        subcontrol-origin: padding;
+        subcontrol-position: top right;
+        width: 22px;
+        border-left: none;
     }
     QLineEdit:focus, QAbstractSpinBox:focus, QComboBox:focus {
-        border: 1px solid #4c7edb;
+        border: 1px solid #8b5e3c;
     }
     QAbstractItemView {
         background-color: #ffffff;
-        color: #202124;
-        border: 1px solid #d9d9d9;
-        selection-background-color: #dbe7ff;
-        selection-color: #202124;
+        color: #2d2d2d;
+        border: 1px solid #e0dad5;
+        font-size: 13px;
+        selection-background-color: #f2e8de;
+        selection-color: #2d2d2d;
     }
     QHeaderView::section {
-        background-color: #eceff3;
-        color: #202124;
-        border: 1px solid #d9d9d9;
-        padding: 5px;
+        background-color: #f0eae3;
+        color: #2d2d2d;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid #e0dad5;
+        padding: 6px 8px;
     }
     QTabBar::tab {
-        background-color: #eceff3;
-        color: #202124;
-        border: 1px solid #d9d9d9;
+        background-color: #ede8e3;
+        color: #2d2d2d;
+        border: 1px solid #d4cecb;
         border-bottom: none;
-        padding: 7px 14px;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
     }
-    QTabBar::tab:selected { background-color: #ffffff; }
+    QTabBar::tab:selected {
+        background-color: #ffffff;
+        color: #8b5e3c;
+        font-weight: 600;
+    }
     QGroupBox {
-        border: 1px solid #d9d9d9;
-        border-radius: 6px;
-        margin-top: 8px;
-        padding-top: 8px;
+        border: 1px solid #d4cecb;
+        border-radius: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        font-size: 13px;
     }
     QGroupBox::title {
         subcontrol-origin: margin;
-        left: 8px;
-        padding: 0 3px;
+        left: 10px;
+        padding: 0 4px;
+        color: #5c3d26;
+        font-weight: 600;
+        font-size: 13px;
     }
     QPushButton {
         background-color: #ffffff;
-        color: #202124;
-        border: 1px solid #b8b8b8;
+        color: #2d2d2d;
+        border: 1px solid #d4cecb;
         border-radius: 8px;
-        font-size: 20px;
+        font-size: 13px;
         font-weight: 600;
-        padding: 6px 12px;
+        padding: 7px 14px;
     }
-    QPushButton:hover { background-color: #f0f4ff; }
-    QPushButton:disabled { color: #777777; background-color: #ededed; }
+    QPushButton:hover {
+        background-color: #f4ece6;
+        border-color: #c78a4a;
+    }
+    QPushButton:pressed {
+        background-color: #e8ded6;
+    }
+    QPushButton:disabled {
+        color: #9e9893;
+        background-color: #ebe7e3;
+        border-color: #e0dad5;
+    }
 """
 
 
 def configure_application_appearance(application: QApplication) -> None:
     """Keep controls readable regardless of the operating-system color scheme."""
     palette = application.palette()
-    palette.setColor(QPalette.ColorRole.Window, QColor("#f7f7f7"))
-    palette.setColor(QPalette.ColorRole.WindowText, QColor("#202124"))
-    palette.setColor(QPalette.ColorRole.Base, QColor("#ffffff"))
-    palette.setColor(QPalette.ColorRole.Text, QColor("#202124"))
-    palette.setColor(QPalette.ColorRole.Button, QColor("#ffffff"))
-    palette.setColor(QPalette.ColorRole.ButtonText, QColor("#202124"))
-    palette.setColor(QPalette.ColorRole.PlaceholderText, QColor("#5f6368"))
-    palette.setColor(QPalette.ColorRole.Highlight, QColor("#dbe7ff"))
-    palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#202124"))
+    for group in (
+        QPalette.ColorGroup.Active,
+        QPalette.ColorGroup.Inactive,
+        QPalette.ColorGroup.Disabled,
+    ):
+        palette.setColor(group, QPalette.ColorRole.Window, QColor("#f6f5f2"))
+        palette.setColor(group, QPalette.ColorRole.WindowText, QColor("#2d2d2d"))
+        palette.setColor(group, QPalette.ColorRole.Base, QColor("#ffffff"))
+        palette.setColor(group, QPalette.ColorRole.Text, QColor("#2d2d2d"))
+        palette.setColor(group, QPalette.ColorRole.Button, QColor("#ffffff"))
+        palette.setColor(group, QPalette.ColorRole.ButtonText, QColor("#2d2d2d"))
+        palette.setColor(group, QPalette.ColorRole.PlaceholderText, QColor("#7a7571"))
+        palette.setColor(group, QPalette.ColorRole.Highlight, QColor("#f2e8de"))
+        palette.setColor(group, QPalette.ColorRole.HighlightedText, QColor("#2d2d2d"))
     application.setPalette(palette)
     application.setStyleSheet(APPLICATION_STYLESHEET)
 
