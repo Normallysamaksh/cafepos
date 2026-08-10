@@ -19,6 +19,7 @@ if exist "cafepos.db" (
 if errorlevel 1 exit /b %errorlevel%
 
 if exist "config.json" copy /Y "config.json" "%RELEASE_DIR%\config.json" >nul
+if exist "default_menu.json" copy /Y "default_menu.json" "%RELEASE_DIR%\default_menu.json" >nul
 
 py -3.12 work\verify_packaging.py
 if errorlevel 1 exit /b %errorlevel%

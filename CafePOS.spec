@@ -10,7 +10,7 @@ analysis = Analysis(
     ["app/main.py"],
     pathex=["."],
     binaries=[],
-    datas=[],
+    datas=[("default_menu.json", ".")],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},

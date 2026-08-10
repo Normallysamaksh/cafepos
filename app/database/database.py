@@ -38,9 +38,17 @@ def initialize_database() -> None:
 
 def _seed_default_menu_if_empty() -> None:
     """Populate default menu items from default_menu.json if the menu is empty."""
+    import sys
+    from pathlib import Path
+
     menu_file = application_directory() / "default_menu.json"
     if not menu_file.exists():
-        return
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            menu_file = Path(meipass) / "default_menu.json"
+        if not menu_file.exists():
+            return
+
 
     from app.models.menu_item import MenuItem
 
