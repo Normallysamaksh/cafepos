@@ -33,6 +33,39 @@ def initialize_database() -> None:
 
     Base.metadata.create_all(engine)
     _add_missing_discount_columns()
+    _seed_default_menu_if_empty()
+
+
+def _seed_default_menu_if_empty() -> None:
+    """Populate default menu items from default_menu.json if the menu is empty."""
+    menu_file = application_directory() / "default_menu.json"
+    if not menu_file.exists():
+        return
+
+    from app.models.menu_item import MenuItem
+
+    with session_scope() as session:
+        first_item = session.query(MenuItem).first()
+        if first_item is not None:
+            return
+
+        import json
+
+        try:
+            with open(menu_file, "r", encoding="utf-8") as f:
+                items_data = json.load(f)
+            for item in items_data:
+                session.add(
+                    MenuItem(
+                        name=item["name"],
+                        category=item["category"],
+                        price=float(item["price"]),
+                        is_deleted=0,
+                    )
+                )
+        except Exception:
+            pass
+
 
 
 def _add_missing_discount_columns() -> None:
